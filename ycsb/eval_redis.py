@@ -1,11 +1,16 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
+# Created on Jan 11 2015
 
-from __future__ import print_function
 from os import path
 from datetime import datetime
 import sys
 import subprocess
 import time
+
+__author__ = "Jinglei Ren"
+__copyright__ = "Copyright (c) 2015 Jinglei Ren"
+__email__ = "jinglei@ren.systems"
+
 
 import parameters
 import redis_config
@@ -34,7 +39,7 @@ def main():
 
     aof = sys.argv[1].lower().split('=')[1]
     time_str = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-    log = open('ycsb-redis@' + time_str + '.log', 'a')
+    log = open('ycsb-redis@' + time_str + '.log', 'ab')
     redis = path.join(redis_dir, 'src/redis-server')
     assert path.isfile(redis)
     ycsb = path.join(ycsb_dir, 'bin/ycsb')
@@ -48,10 +53,9 @@ def main():
             args = [ycsb, param['command'], 'redis']
             args += redis_config.client_args()
             args += parameters.command_args(param)
-            print(args)
             output = subprocess.check_output(args)
             log.write(output)
-            parse_result(output)
+            parse_result(output.decode('UTF-8'))
         except Exception as e:
             print(e)
             break

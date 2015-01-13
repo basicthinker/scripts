@@ -1,4 +1,11 @@
+# Created on Jan 11 2015
+
 from os import path
+
+__author__ = "Jinglei Ren"
+__copyright__ = "Copyright (c) 2015 Jinglei Ren"
+__email__ = "jinglei@ren.systems"
+
 
 NUM_THREADS = 16
 NUM_RECORDS = 2000
