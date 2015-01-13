@@ -3,9 +3,11 @@
 
 from os import path
 from datetime import datetime
+import ast
 import sys
 import subprocess
 import time
+import traceback
 
 __author__ = "Jinglei Ren"
 __copyright__ = "Copyright (c) 2015 Jinglei Ren"
@@ -14,19 +16,15 @@ __email__ = "jinglei@ren.systems"
 
 import parameters
 import redis_config
+import data
 
 PATH_TO_REDIS = '~/Projects/redis/'
 PATH_TO_YCSB = '~/Projects/ycsb/'
 
+RESULTS_FILE = 'ycsb-redis.results'
+
 def usage(main_command):
     print('Usage:', main_command, 'aof=[none, everysec, always]')
-
-results = { }
-
-def parse_result(output):
-    for line in output.split('\n'):
-        if line.startswith('[OVERALL]'):
-            print(line)
 
 def main():
     if len(sys.argv) != 2 or not sys.argv[1].lower().startswith('aof='):
@@ -38,15 +36,25 @@ def main():
     ycsb_dir = path.expanduser(PATH_TO_YCSB)
 
     aof = sys.argv[1].lower().split('=')[1]
+
     time_str = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-    log = open('ycsb-redis@' + time_str + '.log', 'ab')
+    log_file = open('ycsb-redis@' + time_str + '.log', 'ab')
+
+    results = { }
+    if path.isfile(RESULTS_FILE):
+        existing = open(RESULTS_FILE, 'r')
+        lines = existing.read()
+        if len(lines) > 0:
+            results = ast.literal_eval(lines)
+        existing.close()
+
     redis = path.join(redis_dir, 'src/redis-server')
     assert path.isfile(redis)
     ycsb = path.join(ycsb_dir, 'bin/ycsb')
     assert path.isfile(ycsb)
 
     redis_args = [redis] + redis_config.server_args(aof)
-    redis_process = subprocess.Popen(redis_args, stdout=log)
+    redis_process = subprocess.Popen(redis_args, stdout=log_file)
     time.sleep(1)
     for param in parameters.full_list(path.join(ycsb_dir, 'workloads')):
         try:
@@ -54,12 +62,18 @@ def main():
             args += redis_config.client_args()
             args += parameters.command_args(param)
             output = subprocess.check_output(args)
-            log.write(output)
-            parse_result(output.decode('UTF-8'))
+            log_file.write(output)
+            run_result = data.parse(output.decode('UTF-8'))
+            data.append(results, param, aof, run_result)
         except Exception as e:
-            print(e)
+            print(traceback.format_exc())
             break
     redis_process.terminate();
+    if aof != 'none':
+        assert os.isfile('appendonly.aof')
+
+    results_file = open(RESULTS_FILE, 'w')
+    results_file.write(str(results))
 
 if __name__ == '__main__':
     main()
