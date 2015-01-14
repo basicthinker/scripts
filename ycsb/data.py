@@ -2,11 +2,14 @@
 
 import statistics
 import math
+import os
 
 __author__ = "Jinglei Ren"
 __copyright__ = "Copyright (c) 2015 Jinglei Ren"
 __email__ = "jinglei@ren.systems"
 
+
+RESULTS_FILE = 'ycsb-redis.results'
 
 def parse(output):
     run = {}
@@ -23,7 +26,7 @@ def parse(output):
     return run
 
 def append(results, param, aof, run):
-    workload = param['command'] + param['workload']
+    workload = param['command'] + '-' + os.path.basename(param['workload'])
     if not workload in results:
         results[workload] = {}
     if not aof in results[workload]:
@@ -33,8 +36,10 @@ def append(results, param, aof, run):
 def calculate(runs):
     throughputs = []
     for run in runs:
-        throughtputs.append(run['Throughput(ops/sec)'])
+        throughputs.append(run['Throughput(ops/sec)'])
     mean = statistics.mean(throughputs)
-    stderr = statistics.stdev(throughputs) / math.sqrt(len(runs))
+    stderr = 0
+    if len(throughputs) >= 2:
+        stderr = statistics.stdev(throughputs) / math.sqrt(len(runs))
     return [mean, stderr]
 

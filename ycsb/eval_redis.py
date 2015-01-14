@@ -5,6 +5,7 @@ from os import path
 from datetime import datetime
 import ast
 import sys
+import os
 import subprocess
 import time
 import traceback
@@ -21,7 +22,7 @@ import data
 PATH_TO_REDIS = '~/Projects/redis/'
 PATH_TO_YCSB = '~/Projects/ycsb/'
 
-RESULTS_FILE = 'ycsb-redis.results'
+AOF_FILE = 'appendonly.aof'
 
 def usage(main_command):
     print('Usage:', main_command, 'aof=[none, everysec, always]')
@@ -41,8 +42,8 @@ def main():
     log_file = open('ycsb-redis@' + time_str + '.log', 'ab')
 
     results = { }
-    if path.isfile(RESULTS_FILE):
-        existing = open(RESULTS_FILE, 'r')
+    if path.isfile(data.RESULTS_FILE):
+        existing = open(data.RESULTS_FILE, 'r')
         lines = existing.read()
         if len(lines) > 0:
             results = ast.literal_eval(lines)
@@ -70,10 +71,14 @@ def main():
             break
     redis_process.terminate();
     if aof != 'none':
-        assert os.isfile('appendonly.aof')
+        assert path.isfile(AOF_FILE)
+        size = path.getsize(AOF_FILE)
+        log_file.write(bytes(AOF_FILE + ' size: ' + str(size), 'UTF-8'))
+        os.remove(AOF_FILE)
 
-    results_file = open(RESULTS_FILE, 'w')
+    results_file = open(data.RESULTS_FILE, 'w')
     results_file.write(str(results))
+    results_file.close()
 
 if __name__ == '__main__':
     main()
