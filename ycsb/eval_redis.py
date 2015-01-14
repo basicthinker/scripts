@@ -70,6 +70,7 @@ def main():
             print(traceback.format_exc())
             break
     redis_process.terminate();
+    time.sleep(1)
     if aof != 'none':
         assert path.isfile(AOF_FILE)
         size = path.getsize(AOF_FILE)
