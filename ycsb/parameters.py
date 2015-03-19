@@ -7,9 +7,9 @@ __copyright__ = "Copyright (c) 2015 Jinglei Ren"
 __email__ = "jinglei@ren.systems"
 
 
-NUM_THREADS = 16
-NUM_RECORDS = 2000
-NUM_OPERATIONS = 1000
+NUM_THREADS = 10
+NUM_RECORDS = 400000
+NUM_OPERATIONS = 200000
 
 def __single_run(command, workload):
     param = { }

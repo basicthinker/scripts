@@ -20,8 +20,8 @@ mem_mb=$2
 
 for (( i=1; i<=3; ++i ))
 do
-  cleanup $graph
-  sleep 1
   $GRAPHCHI_ROOT/bin/example_apps/matrix_factorization/als_edgefactors file $graph membudget_mb $mem_mb >> als.output.$mem_mb
+  cleanup $graph
+  sleep 10
 done
 
